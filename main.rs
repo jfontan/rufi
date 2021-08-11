@@ -1,13 +1,23 @@
+use regex::Regex;
+
 fn main() {
-    let str = "hello".to_owned() + "world";
-    println!("{}", str);
+    let args: Vec<String> = std::env::args().collect();
+    println!("ARGS: {:?}", args);
+
+    let search_default = String::from(".");
+    let path_default = String::from(".");
+
+    let search = args.get(1).unwrap_or(&search_default);
+    let path = args.get(2).unwrap_or(&path_default);
+
+    let re = Regex::new(search).unwrap();
 
     let mut paths: Vec<String> = Vec::new();
-    paths.push("/home/jfontan".to_owned());
+    paths.push(String::from(path));
 
     loop {
         if let Some(last) = paths.pop() {
-            let dirs = process(&last);
+            let dirs = process(&last, &re);
             paths.extend(dirs)
         } else {
             break;
@@ -15,7 +25,7 @@ fn main() {
     }
 }
 
-fn process(path: &str) -> Vec<String> {
+fn process(path: &str, re: &Regex) -> Vec<String> {
     let mut dirs: Vec<String> = Vec::new();
 
     let res = std::fs::read_dir(path);
@@ -31,9 +41,11 @@ fn process(path: &str) -> Vec<String> {
         }
 
         let f = d.unwrap();
-        let pp = f.path();
-        let p = pp.to_str().unwrap();
-        println!("{}", p);
+        let p = f.path().to_str().unwrap().to_string();
+
+        if re.is_match(&p) {
+            println!("{}", p);
+        }
 
         if let Err(err) = f.file_type() {
             println!("ERROR: {}", err);
@@ -43,7 +55,7 @@ fn process(path: &str) -> Vec<String> {
         let t = f.file_type().unwrap();
 
         if t.is_dir() {
-            dirs.push(p.to_string());
+            dirs.push(p);
         }
     }
 
