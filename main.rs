@@ -10,6 +10,10 @@ fn main() {
     let search = args.get(1).unwrap_or(&search_default);
     let path = args.get(2).unwrap_or(&path_default);
 
+    find_sequential(path, search);
+}
+
+fn find_sequential(path: &String, search: &String) {
     let re = Regex::new(search).unwrap();
 
     let mut paths: Vec<String> = Vec::new();
